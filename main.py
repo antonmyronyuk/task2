@@ -34,7 +34,44 @@ def simulate_random(nodes_num, packages_num=4):
 
     # False - node is not visited (hasn't received a package earlier)
     # True - visited (already have received a package)
-    nodes = [False for _ in range(nodes_num)]
+    nodes = [False] * nodes_num
+
+    q.append(0)  # start from 0 node
+    nodes[0] = True  # set it to visited
+    while q:
+        process_node()
+
+    # check if all nodes have received a package
+    return all(nodes)
+
+
+def simulate_smart_random(nodes_num, packages_num=4):
+    """
+    Each node sends packets to random group of nodes. We choose one
+    random node and other nodes are neighbour for this random node.
+    If node have received a package it wouldn't sent it to others.
+    :return: True if all nodes have received a package else False
+    """
+    def process_node():
+        """
+        Process current node in queue: choose random group
+        of nodes to send a package and set it to visited
+        """
+        print(q)
+        current = q.popleft()  # remove from queue
+
+        receiver = randint(0, nodes_num - 1)
+        group = ((receiver + i) % nodes_num for i in range(packages_num))
+        for node_ind in group:
+            if not nodes[node_ind]:
+                nodes[node_ind] = True
+                q.append(node_ind)
+
+    q = deque()  # queue contain nodes indexes to process
+
+    # False - node is not visited (hasn't received a package earlier)
+    # True - visited (already have received a package)
+    nodes = [False] * nodes_num
 
     q.append(0)  # start from 0 node
     nodes[0] = True  # set it to visited
@@ -72,7 +109,9 @@ def simulate_random_registry(nodes_num, packages_num=4):
     q = deque()  # queue contain nodes indexes to process
 
     nodes_indexes = list(range(nodes_num))  # registry
-    nodes = [False for _ in range(nodes_num)]
+    # False - node is not visited (hasn't received a package earlier)
+    # True - visited (already have received a package)
+    nodes = [False] * nodes_num
 
     q.append(0)  # start from 0 node
     nodes[0] = True  # set it to visited
@@ -113,5 +152,5 @@ arguments = parser.parse_args()
 iterations = arguments.iterations
 nodes_count = arguments.nodes
 
-res = repeat(iterations, simulate_random, nodes_count, 4)
+res = repeat(iterations, simulate_smart_random, nodes_count, 4)
 print('In {0}% cases all nodes received the packet'.format(res))

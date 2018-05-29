@@ -39,6 +39,14 @@ def simulate_random(nodes_num, packages_num=4):
         Process current node in queue: choose random nodes
         to send a package and set current node to visited
         """
+        # also I have checked variant with shuffle:
+        # receivers = list(range(nodes_num))
+        # shuffle(receivers)
+
+        # it helps to avoid sending packages from one node more
+        # than one time to other node and gives nearly 75% success
+        # but it is VERY slow (~0.45s) and use a lot of memory
+
         current = q.popleft()  # remove from queue
 
         for _ in range(packages_num):

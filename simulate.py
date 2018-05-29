@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import timeit
 from random import randint
 from collections import deque  # deque is faster than Queue
@@ -211,6 +212,9 @@ if __name__ == '__main__':
 
     iterations = arguments.iterations
     nodes_count = arguments.nodes
+    if iterations <= 0 or nodes_count <= 0:
+        print('Iterations number and nodes number should be greater than 0')
+        sys.exit()
 
     if arguments.group:
         func = simulate_group_random

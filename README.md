@@ -10,7 +10,7 @@
 <img src="/readme_images/example.png">
 
 ## Random from registry
-Explanation why there is exactly 5 iterations 
+Explanation why there are exactly 5 iterations 
 (for 20 nodes which send 4 packages)  
 
 <img src="/readme_images/explanation.png">

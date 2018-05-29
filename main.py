@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import timeit
 from random import randint
 from collections import deque
 from argparse import ArgumentParser
@@ -17,7 +18,7 @@ def simulate_random(nodes_num, packages_num=4):
         Process current node in queue: choose random nodes
         to send a package and set it to visited
         """
-        print(q)
+        # print(q)
         current = q.popleft()  # remove from queue
 
         for _ in range(packages_num):
@@ -45,7 +46,7 @@ def simulate_random(nodes_num, packages_num=4):
     return all(nodes)
 
 
-def simulate_smart_random(nodes_num, packages_num=4):
+def simulate_group_random(nodes_num, packages_num=4):
     """
     Each node sends packets to random group of nodes. We choose one
     random node and other nodes are neighbour for this random node.
@@ -57,7 +58,7 @@ def simulate_smart_random(nodes_num, packages_num=4):
         Process current node in queue: choose random group
         of nodes to send a package and set it to visited
         """
-        print(q)
+        # print(q)
         current = q.popleft()  # remove from queue
 
         receiver = randint(0, nodes_num - 1)
@@ -94,7 +95,7 @@ def simulate_random_registry(nodes_num, packages_num=4):
         Process current node in queue: choose random nodes to
         send a package set it to visited, delete it from registry
         """
-        print(q)
+        # print(q)
         q.popleft()  # remove from queue
 
         for _ in range(packages_num):
@@ -121,7 +122,6 @@ def simulate_random_registry(nodes_num, packages_num=4):
         process_node()
 
     # check if all nodes have received a package
-    print(nodes_indexes)
     return all(nodes)
 
 
@@ -132,25 +132,40 @@ def repeat(count, func, *args):
     :param args: function arguments: nodes_num, packages_num
     :return: percent of cases where all nodes have received a package
     """
-    return sum(
-        (int(func(*args)) for _ in range(count))
-    ) / count * 100
+    start_time = timeit.default_timer()
+    res = sum((int(func(*args)) for _ in range(count))) / count * 100
+    return res, timeit.default_timer() - start_time
 
 
 # ############################ ARGS PARSING ###################################
 
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Epidemic simulator')
 
-parser = ArgumentParser(description='Epidemic simulator')
-required_args = parser.add_argument_group('required arguments')
-required_args.add_argument('-n', '--nodes', type=int, metavar='N',
-                           help='number of nodes (int)', required=True)
-required_args.add_argument('-i', '--iterations', type=int, metavar='I',
-                           help='number of iterations (int)', required=True)
+    required_args = parser.add_argument_group('required arguments')
+    required_args.add_argument('-n', '--nodes', type=int, metavar='N',
+                               help='number of nodes (int)', required=True)
+    required_args.add_argument('-i', '--iterations', type=int, metavar='I',
+                               help='number of iterations (int)', required=True)
 
-arguments = parser.parse_args()
+    parser.add_argument('--group', action='store_true',
+                        help='smart group random algorithm')
+    parser.add_argument('--registry', action='store_true',
+                        help='algorithm with indexes registry')
+    # if you give two parameters: --group and
+    # --registry only group will be used
+    arguments = parser.parse_args()
 
-iterations = arguments.iterations
-nodes_count = arguments.nodes
+    iterations = arguments.iterations
+    nodes_count = arguments.nodes
 
-res = repeat(iterations, simulate_smart_random, nodes_count, 4)
-print('In {0}% cases all nodes received the packet'.format(res))
+    if arguments.group:
+        func = simulate_group_random
+    elif arguments.registry:
+        func = simulate_random_registry
+    else:
+        func = simulate_random
+
+    res = repeat(iterations, func, nodes_count, 4)
+    print('In {0:0.1f}% cases all nodes received the packet'.format(res[0]))
+    print('Time wasted: {0:0.3f}s'.format(res[1]))

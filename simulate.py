@@ -41,10 +41,22 @@ def simulate_random(nodes_num, packages_num=4):
         current = q.popleft()  # remove from queue
 
         for _ in range(packages_num):
-            # choose other node
+            # choose other node from all (except of myself)
             receiver = randint(0, nodes_num - 2)
             # offset receiver to avoid sending packages to myself
-            receiver += 1 if receiver >= current else 0
+            # receiver += 1 if receiver >= current else 0
+            if receiver >= current:  # it is faster than line above
+                receiver += 1
+
+            # let nodes_num = 20, packages_num = 4
+            # for example: (current = 0, receiver = 18) => receiver = 19
+            # for example: (current = 10, receiver = 5) => receiver = 5
+            # for example: (current = 5, receiver = 8) => receiver = 9
+            # for example: (current = 5, receiver = 4) => receiver = 4
+            # for example: (current = 5, receiver = 5) => receiver = 5
+
+            # following this rules we will avoid sending of package
+            # from current to current (to myself)
 
             if not nodes[receiver]:
                 # if not visited, visit it and add to queue
@@ -84,6 +96,11 @@ def simulate_group_random(nodes_num, packages_num=4):
 
         receiver = randint(0, nodes_num - 1)  # first element in group
         group = ((receiver + i) % nodes_num for i in range(packages_num))
+
+        # let nodes_num = 20, packages_num = 4
+        # for example: receiver = 5, so we have a group = [5, 6, 7, 8]
+        # for example: receiver = 18, so we have a group = [18, 19, 0, 1]
+
         for node_ind in group:
             if not nodes[node_ind]:
                 # if not visited, visit it and add to queue
@@ -117,7 +134,7 @@ def simulate_random_registry(nodes_num, packages_num=4):
     def process_node():
         """
         Process current node in queue: choose random nodes to
-        send a package set it to visited, delete it from registry
+        send a package, set it to visited, delete it from registry
         """
         q.popleft()  # remove from queue
 
@@ -126,16 +143,17 @@ def simulate_random_registry(nodes_num, packages_num=4):
                 # exit if all were visited
                 break
 
-            # choose other node
+            # choose other node from nodes_indexes
             receiver = randint(0, len(nodes_indexes) - 1)
-            q.append(receiver)
+            q.append(nodes_indexes[receiver])  # add to queue
             nodes[nodes_indexes[receiver]] = True  # set to visited
             del nodes_indexes[receiver]  # delete from registry
 
     q = deque()  # queue contain nodes indexes to process
 
     # registry of non-visited nodes (it is not very good to use list
-    # there because we need to delete single-items from there)
+    # there because we need to delete single-items from there but if we
+    # used non-list there, we would get problem with random generating)
     nodes_indexes = list(range(nodes_num))
 
     # False - node is not visited (hasn't received a package earlier)
@@ -144,7 +162,7 @@ def simulate_random_registry(nodes_num, packages_num=4):
 
     q.append(0)  # start from 0 node
     nodes[0] = True  # set it to visited
-    del nodes_indexes[0]
+    del nodes_indexes[0]  # delete visited node from registry
 
     it_num = start_epidemic(q, nodes, process_node)  # main process
 
@@ -155,11 +173,12 @@ def simulate_random_registry(nodes_num, packages_num=4):
 # ############################## REPEATER #####################################
 def repeat(count, func, *args, **kwargs):
     """
+    Repeat 'func' executing 'count' times
     :param count: number of iterations
     :param func: function to iterate
-    :param args: function arguments: nodes_num, packages_num
-    :return: percent of cases where all nodes have received a package
-    time wasted, iterations number
+    :param args: func arguments: nodes_num, packages_num
+    :return: percent of cases where all nodes have received a package,
+    time wasted (sec), iterations number (average for one func call)
     """
     start_time = timeit.default_timer()
     results = [func(*args, **kwargs) for _ in range(count)]
@@ -171,9 +190,9 @@ def repeat(count, func, *args, **kwargs):
     return percent, finish_time - start_time, avg_iterations
 
 
-# ############################ ARGS PARSING ###################################
-
 if __name__ == '__main__':
+
+    # ############################ ARGS PARSING ###################################
     parser = ArgumentParser(description='Epidemic simulator')
 
     required_args = parser.add_argument_group('required arguments')
@@ -200,21 +219,25 @@ if __name__ == '__main__':
     else:
         func = simulate_random
 
+    # ############################ REPEATING ###################################
     res = repeat(iterations, func, nodes_count, 4)
     print('\nIn {0:0.1f}% cases all nodes received the packet'.format(res[0]))
     print('Time wasted: {0:0.3f}s'.format(res[1]))
     print('Average number of iterations (in queue): {0:0.3f}'.format(res[2]))
-    # we only count processing of node as single iteration
-    # we have decided: number of iterations = number of popleft's from queue
 
-    # algorithm 1 is the most slowest because it generates packages_num=4
-    # for each iteration and choose a lot of already visited nodes
+    # we count only processing of node as single iteration
+    # in fact: number of iterations = number of popleft's from queue
+
+    # algorithm 1 is the most slowest because it generates
+    # packages_num=4 random receivers for each iteration and
+    # choose a lot of already visited nodes
 
     # algorithm 2 is faster, because it generate only 1 random value
-    # other values are neighbours for this value, as we can see, results
-    # of executing algorithm 2 are little better than algorithm 1 results
+    # other values are neighbours for this value; also random group is more
+    # effective than single random values; as we can see, results
+    # of executing algorithm 2 are better than algorithm 1 results
 
-    # algorithm 3 is the best and the fastest because its know which
+    # algorithm 3 is the best and the fastest because it knows which
     # nodes haven't received a package yet and sends packages to them
     # but, of course, it requires additional memory to store indexes
     # of nodes which haven't received a package yet (registry)

@@ -8,16 +8,18 @@ from argparse import ArgumentParser
 
 
 # ############################ HELP FUNC ###################################
-def start_epidemic(queue, func_process_node, *args, **kwargs):
+def start_epidemic(queue, nodes, func_process_node, *args, **kwargs):
     """
     :param queue: nodes indexes to process
+    :param nodes: bool array which stores if node received package
     :param func_process_node: func which sends packages to other nodes
     :param args: args for func_process_node
     :param kwargs: kwargs for func_process_node
     :return: number of iterations
     """
     it_num = 0  # iterations number
-    while queue:
+    # stop loop if all nodes already received package
+    while queue and not all(nodes):
         it_num += 1
         func_process_node(*args, **kwargs)
     return it_num
@@ -58,7 +60,7 @@ def simulate_random(nodes_num, packages_num=4):
     q.append(0)  # start from 0 node
     nodes[0] = True  # set it to visited
 
-    it_num = start_epidemic(q, process_node)  # main process
+    it_num = start_epidemic(q, nodes, process_node)  # main process
 
     # check if all nodes have received a package
     return all(nodes), it_num
@@ -97,7 +99,7 @@ def simulate_group_random(nodes_num, packages_num=4):
     q.append(0)  # start from 0 node
     nodes[0] = True  # set it to visited
 
-    it_num = start_epidemic(q, process_node)  # main process
+    it_num = start_epidemic(q, nodes, process_node)  # main process
 
     # check if all nodes have received a package
     return all(nodes), it_num
@@ -144,12 +146,13 @@ def simulate_random_registry(nodes_num, packages_num=4):
     nodes[0] = True  # set it to visited
     del nodes_indexes[0]
 
-    it_num = start_epidemic(q, process_node)  # main process
+    it_num = start_epidemic(q, nodes, process_node)  # main process
 
     # check if all nodes have received a package
     return all(nodes), it_num
 
 
+# ############################## REPEATER #####################################
 def repeat(count, func, *args, **kwargs):
     """
     :param count: number of iterations
@@ -201,3 +204,17 @@ if __name__ == '__main__':
     print('\nIn {0:0.1f}% cases all nodes received the packet'.format(res[0]))
     print('Time wasted: {0:0.3f}s'.format(res[1]))
     print('Average number of iterations (in queue): {0:0.3f}'.format(res[2]))
+    # we only count processing of node as single iteration
+    # we have decided: number of iterations = number of popleft's from queue
+
+    # algorithm 1 is the most slowest because it generates packages_num=4
+    # for each iteration and choose a lot of already visited nodes
+
+    # algorithm 2 is faster, because it generate only 1 random value
+    # other values are neighbours for this value, as we can see, results
+    # of executing algorithm 2 are little better than algorithm 1 results
+
+    # algorithm 3 is the best and the fastest because its know which
+    # nodes haven't received a package yet and sends packages to them
+    # but, of course, it requires additional memory to store indexes
+    # of nodes which haven't received a package yet (registry)

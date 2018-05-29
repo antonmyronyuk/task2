@@ -47,6 +47,13 @@ def simulate_random(nodes_num, packages_num=4):
         # than one time to other node and gives nearly 75% success
         # but it is VERY slow (~0.45s) and use a lot of memory
 
+        # also I have checked algorithm that finds packages_num
+        # unique nodes and sends packages to them, it gives also
+        # nearly 75% success, but is also slower than algorithm 1
+
+        # but task doesn't require unique nodes, so I decided
+        # to stop on current version of algorithm 1
+
         current = q.popleft()  # remove from queue
 
         for _ in range(packages_num):

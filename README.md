@@ -7,6 +7,9 @@
  2) Group random
  3) Random from registry  
 
+As you can see below group random is better than simple random.  
+Random from registry is ideal, but it requires additional memory.  
+
 <img src="/readme_images/example.png">
 
 ## Random from registry

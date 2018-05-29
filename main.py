@@ -5,27 +5,38 @@ from collections import deque, namedtuple
 from argparse import ArgumentParser
 # https://docs.python.org/3.6/library/argparse.html
 
-Node = namedtuple('Node', ['pos', 'visited'])
+# Node = namedtuple('Node', ['pos', 'visited'])
 
 
 def simulate_random(nodes_num, packages_num=4):
+    """
+    Each node sends packets to random nodes only once
+    """
     def process_package():
-        current = q.popleft()           # remove from queue
-        if current.visited:             # is faster than ==
+        """
+        Process current node in queue: set it to visited,
+        choose random nodes to send a package
+        """
+        current = q.popleft()  # remove from queue
+        if nodes[current]:
+            # already visited, exit
             return
-        nodes[current.pos] = True
+        nodes[current] = True  # set to visited
         for _ in range(packages_num):
             receiver = randint(0, nodes_num - 1)
-            q.append(Node(receiver, nodes[receiver]))
+            q.append(receiver)
 
-    q = deque()
+    q = deque()  # queue nodes to process
+
+    # False - node is not visited (hasn't received a package earlier)
+    # True - visited (already have received a package)
     nodes = [False for _ in range(nodes_num)]
-    q.append(Node(0, nodes[0]))
-    k = 0
+
+    q.append(0)  # start from 0 node
     while len(q):
-        k += 1
         process_package()
 
+    # check if all nodes received a package
     return all(nodes)
 
 

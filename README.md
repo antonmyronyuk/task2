@@ -1,5 +1,7 @@
 # Epidemic simulator  
 ## Usage
+Keys priority: --group, --registry, --unique
+
 <img src="/readme_images/help.png">
 
 ## Algorithms

@@ -22,5 +22,6 @@ Random from registry is ideal, but it requires additional memory.
 ## Random from registry
 Explanation why there are exactly 5 iterations 
 (for 20 nodes which send 4 packages)  
+The order of the arrows may be different, but common number of arrows is the same.
 
 <img src="/readme_images/explanation.png">

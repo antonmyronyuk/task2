@@ -11,6 +11,8 @@ from argparse import ArgumentParser
 # ############################ HELP FUNC ###################################
 def start_epidemic(queue, nodes, func_process_node, *args, **kwargs):
     """
+    Process all nodes in queue. Stop process when queue is empty
+    or all nodes have already received a package
     :param queue: nodes indexes to process
     :param nodes: bool array which stores if node received package
     :param func_process_node: func which sends packages to other nodes

@@ -113,6 +113,10 @@ def simulate_random_unique(nodes_num, packages_num=4):
         lst = list(range(nodes_num))  # like registry
 
         for _ in range(packages_num):
+            if not lst:
+                # exit if all were visited
+                break
+                
             receiver = randint(0, len(lst) - 1)
 
             if not nodes[lst[receiver]]:

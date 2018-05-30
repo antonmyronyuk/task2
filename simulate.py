@@ -29,8 +29,10 @@ def start_epidemic(queue, nodes, func_process_node, *args, **kwargs):
 # ############################ ALGORITHM 1 ###################################
 def simulate_random(nodes_num, packages_num=4):
     """
-    Each node sends packets to random nodes. If node have already
+    Each node sends packages to random nodes. If node have already
     received a package it wouldn't sent it to others.
+    There node may send packages more than once to other node.
+    For example it may choose such nodes: 5, 8, 8, 3
     :return: True if all nodes have received a package else False
     and iterations number
     """
@@ -46,13 +48,6 @@ def simulate_random(nodes_num, packages_num=4):
         # it helps to avoid sending packages from one node more
         # than one time to other node and gives nearly 75% success
         # but it is VERY slow (~0.45s) and use a lot of memory
-
-        # also I have checked algorithm that finds packages_num
-        # unique nodes and sends packages to them, it gives also
-        # nearly 75% success, but is also slower than algorithm 1
-
-        # but task doesn't require unique nodes, so I decided
-        # to stop on current version of algorithm 1
 
         current = q.popleft()  # remove from queue
 
@@ -72,7 +67,7 @@ def simulate_random(nodes_num, packages_num=4):
             # for example: (current = 5, receiver = 5) => receiver = 5
 
             # following this rules we will avoid sending of package
-            # from current to current (to myself)
+            # from current to current (to itself)
 
             if not nodes[receiver]:
                 # if not visited, visit it and add to queue
@@ -98,7 +93,7 @@ def simulate_random(nodes_num, packages_num=4):
 def simulate_random_unique(nodes_num, packages_num=4):
     """
     Each node sends packets to unique random nodes. If node have
-    already received a package it wouldn't sent it to others.
+    already received a package it wouldn't sent it to others.=
     :return: True if all nodes have received a package else False
     and iterations number
     """
@@ -108,15 +103,19 @@ def simulate_random_unique(nodes_num, packages_num=4):
         to send a package and set current node to visited
         """
 
-        q.popleft()  # remove from queue
+        current = q.popleft()  # remove from queue
         # choose only unique nodes
         lst = list(range(nodes_num))  # like registry
+
+        # to avoid sending packages from node to itself we just
+        # delete it from registry
+        del lst[current]
 
         for _ in range(packages_num):
             if not lst:
                 # exit if all were visited
                 break
-                
+
             receiver = randint(0, len(lst) - 1)
 
             if not nodes[lst[receiver]]:
@@ -124,7 +123,7 @@ def simulate_random_unique(nodes_num, packages_num=4):
                 nodes[lst[receiver]] = True
                 q.append(lst[receiver])
 
-            del lst[receiver]
+            del lst[receiver]  # delete from registry
 
     q = deque()  # queue contain nodes indexes to process
 
@@ -155,13 +154,22 @@ def simulate_group_random(nodes_num, packages_num=4):
         Process current node in queue: choose random group
         of nodes to send a package and set it to visited
         """
-        q.popleft()  # remove from queue
-
+        current = q.popleft()  # remove from queue
         receiver = randint(0, nodes_num - 1)  # first element in group
-        group = ((receiver + i) % nodes_num for i in range(packages_num))
 
-        # let nodes_num = 20, packages_num = 4
-        # for example: receiver = 5, so we have a group = [5, 6, 7, 8]
+        # to avoid sending packages from node to itself we choose not 4
+        # but 5 elements in group and if current node is in group, we
+        # just remove it, else we remove last element in group
+
+        group = [(receiver + i) % nodes_num for i in range(packages_num + 1)]
+
+        if current in group:
+            group.remove(current)
+        else:
+            group.pop()
+
+        # let nodes_num = 20, packages_num = 4, current = 6
+        # for example: receiver = 5, so we have a group = [5, 7, 8, 9]
         # for example: receiver = 18, so we have a group = [18, 19, 0, 1]
 
         for node_ind in group:
@@ -302,15 +310,14 @@ if __name__ == '__main__':
     # packages_num=4 random receivers for each iteration and
     # choose a lot of already visited nodes
 
-    # algorithm 1_1 is the most slowest because it generates
-    # packages_num=4 random unique (it may send package to itself)
-    # receivers for each iteration and should delete already visited
-    # nodes from list
+    # algorithm 1_1 is the most slowest because it should delete
+    # already visited nodes from list-registry and should generate
+    # packages_num=4 random numbers for each iteration
 
     # algorithm 2 is faster, because it generate only 1 random value
     # other values are neighbours for this value; also random group is more
     # effective than single random values; as we can see, results
-    # of executing algorithm 2 are better than algorithm 1 results
+    # of executing algorithm 2 are better than algorithm 1 and 1_1 results
 
     # algorithm 3 is the best and the fastest because it knows which
     # nodes haven't received a package yet and sends packages to them

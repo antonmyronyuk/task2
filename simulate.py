@@ -94,6 +94,49 @@ def simulate_random(nodes_num, packages_num=4):
     return all(nodes), it_num
 
 
+# ############################ ALGORITHM 1_1 ###################################
+def simulate_random_unique(nodes_num, packages_num=4):
+    """
+    Each node sends packets to unique random nodes. If node have
+    already received a package it wouldn't sent it to others.
+    :return: True if all nodes have received a package else False
+    and iterations number
+    """
+    def process_node():
+        """
+        Process current node in queue: choose random nodes
+        to send a package and set current node to visited
+        """
+
+        q.popleft()  # remove from queue
+        # choose only unique nodes
+        lst = list(range(nodes_num))  # like registry
+
+        for _ in range(packages_num):
+            receiver = randint(0, len(lst) - 1)
+
+            if not nodes[lst[receiver]]:
+                # if not visited, visit it and add to queue
+                nodes[lst[receiver]] = True
+                q.append(lst[receiver])
+
+            del lst[receiver]
+
+    q = deque()  # queue contain nodes indexes to process
+
+    # False - node is not visited (hasn't received a package earlier)
+    # True - visited (already have received a package)
+    nodes = [False] * nodes_num
+
+    q.append(0)  # start from 0 node
+    nodes[0] = True  # set it to visited
+
+    it_num = start_epidemic(q, nodes, process_node)  # main process
+
+    # check if all nodes have received a package
+    return all(nodes), it_num
+
+
 # ############################ ALGORITHM 2 ###################################
 def simulate_group_random(nodes_num, packages_num=4):
     """
@@ -221,6 +264,8 @@ if __name__ == '__main__':
                         help='smart group random algorithm')
     parser.add_argument('--registry', action='store_true',
                         help='algorithm with indexes registry')
+    parser.add_argument('--unique', action='store_true',
+                        help='algorithm with unique random')
     # if you give two parameters: --group and
     # --registry only group will be used
     arguments = parser.parse_args()
@@ -235,6 +280,8 @@ if __name__ == '__main__':
         func = simulate_group_random
     elif arguments.registry:
         func = simulate_random_registry
+    elif arguments.unique:
+        func = simulate_random_unique
     else:
         func = simulate_random
 
@@ -247,9 +294,14 @@ if __name__ == '__main__':
     # we count only processing of node as single iteration
     # in fact: number of iterations = number of popleft's from queue
 
-    # algorithm 1 is the most slowest because it generates
+    # algorithm 1 is slow because it generates
     # packages_num=4 random receivers for each iteration and
     # choose a lot of already visited nodes
+
+    # algorithm 1_1 is the most slowest because it generates
+    # packages_num=4 random unique (it may send package to itself)
+    # receivers for each iteration and should delete already visited
+    # nodes from list
 
     # algorithm 2 is faster, because it generate only 1 random value
     # other values are neighbours for this value; also random group is more

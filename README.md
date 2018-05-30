@@ -3,8 +3,9 @@
 <img src="/readme_images/help.png">
 
 ## Algorithms
- 1) Simple random
- 2) Group random
+ 1) - simple random (may send more than one package from one node to another)  
+    - unique random (may send package to itself)
+ 2) Group random (may send package to itself)
  3) Random from registry  
 
 As you can see below group random is better than simple random.  
